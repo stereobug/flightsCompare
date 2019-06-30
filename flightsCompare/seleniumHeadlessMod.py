@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from selenium import webdriver
 from datetime import datetime as d 
 from datetime import timedelta as td 
+from tabulate import tabulate
 import argparse
 
 
@@ -12,6 +15,7 @@ def init_options():
     parser.add_argument('-p', '--pricecap', metavar='', type=int, required=False, help="price in GBP to match euqal or cheaper| default is £50")
     parser.add_argument('-c', '--citydeaprting', metavar='', required=False, help="city departing from | default is GLA (Glasgow)")
     parser.add_argument('-n', '--numberofextradays', metavar='', type=int, required=False, help="number of extra days after specifed date, to report on | default is for the specfied date only")
+    parser.add_argument('-l', '--links', required=False, action='store_true', help="specify if you want links to page returned | default is off")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-O', '--Oneway', action='store_true', help='one way flights | default is one way' )
@@ -28,7 +32,7 @@ def generateURL(args, depart):
 
     if day > 0:
         depart = depart + td(days=1)
-        print(depart)
+        # print(depart)
 
     # url manipulation for one way or return flights 
 
@@ -36,8 +40,14 @@ def generateURL(args, depart):
         cityDeparting = args.citydeaprting
     else:
         cityDeparting = "GLA"
+    
+    # URL structure DRY
 
-    oneWay = 'https://www.google.co.uk/flights/#flt=' + cityDeparting + '.r/m/02j9z.' + str(depart) + ';c:GBP;e:1;ls:1w;sd:1;er:177207493.-258125000.716613478.698125000;t:e;tt:o'
+    root = 'https://www.google.co.uk/flights/#flt='
+    link = '.r/m/02j9z.'
+    currencyAndCoordinates = ';c:GBP;e:1;ls:1w;sd:1;er:177207493.-258125000.716613478.698125000;t:e'
+
+    oneWay = '{}{}{}{}{};tt:o'.format(root, cityDeparting, link, depart,currencyAndCoordinates )
     url = oneWay
 
     if args.Return: 
@@ -48,7 +58,7 @@ def generateURL(args, depart):
         
         interval = td(days=interval)
         Return = depart + interval
-        bothWays = 'https://www.google.co.uk/flights/#flt=' + cityDeparting + '.r/m/02j9z.' + str(depart) + '*r/m/02j9z.GLA.' + str(Return) + ';c:GBP;e:1;ls:1w;sd:1;er:177207493.-258125000.716613478.698125000;t:e'
+        bothWays = '{}{}{}{}*r/m/02j9z.GLA.{}{}'.format(root, cityDeparting, link, depart, Return, currencyAndCoordinates)
         url = bothWays
     else:
         Return = args.Return
@@ -66,8 +76,9 @@ def gather(url, priceCap):
     exe = 'D:\\I.T\\python\\APIs\\flightsCompare\\chromedriver.exe'
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
+    options.add_experimental_option('excludeSwitches', ['enable-logging']) # suppress message
     options.add_argument('window-size=1200x600') # optional
-    driver = webdriver.Chrome(executable_path=exe, chrome_options = options)
+    driver = webdriver.Chrome(executable_path=exe, options = options)
     driver.get(url)
 
     # build report
@@ -109,7 +120,7 @@ def gather(url, priceCap):
     return Results
 
 
-def report(Results, depart, priceCap, cityDeparting, Return):
+def report(Results, depart, priceCap, cityDeparting, Return, url, args):
     print("")
 
     if len(Results) == 0:
@@ -117,28 +128,34 @@ def report(Results, depart, priceCap, cityDeparting, Return):
     else:
         # sort by price and print in order
         ResultsSort = sorted(Results , key=lambda elem: "%03d" % (int(elem['price'][1:])))
+        # squeeze in some headers to the top of the list
+        ResultsSort.insert(0, {
+        'city' : 'city',
+        'stops' : 'stops',
+        'duration' : 'duration',
+        'price' : 'price',
+        })
         if Return:
-            print('Flights outgoing from ' + cityDeparting + ' on ' + str(depart) + ' for £' + str(priceCap) + ' or less, returning ' + str(Return) + ':')
+            print('Flights outgoing from {} on {} for £{} or less, returning {}:'.format(cityDeparting, depart.strftime('%d-%b-%Y'), priceCap, Return.strftime('%d-%b-%Y')))
         else:
-            print('Flights outgoing from ' + cityDeparting + ' on ' + str(depart) + ' for £' + str(priceCap) + ' or less:')
+            print('Flights outgoing from {} on {} for £{} or less:'.format(cityDeparting, depart.strftime('%d-%b-%Y'), priceCap))
         print()
-        for Dict in ResultsSort:
-            for field in Dict:
-                print(Dict[field], "| ", end = "")
-            print()
+        print(tabulate(ResultsSort, tablefmt="orgtbl", headers="firstrow"))
         print()
-
+    if args.links:
+        print("link:", url)
     print("All done!")
 
 
 if __name__ == "__main__":
     args = init_options()
+    # work out how many times we have to generate URL and get report
     if args.numberofextradays:
         daysToRun = args.numberofextradays + 1
     else:
         daysToRun = 1
     for day in range(0, daysToRun):
-        print("day =", day)
+        # print("day =", day)
         if day == 0:
             if args.departuredate:
                 depart = d.strptime(args.departuredate, "%Y-%m-%d").date()
@@ -146,4 +163,4 @@ if __name__ == "__main__":
                 depart = d.now().date() + td(days=1)
         (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart)
         Results = gather(url, priceCap)
-        report(Results, depart, priceCap, cityDeparting, Return)
+        report(Results, depart, priceCap, cityDeparting, Return, url, args)
