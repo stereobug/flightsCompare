@@ -4,42 +4,29 @@ from datetime import timedelta as td
 import argparse
 
 
+def init_options():
+    parser = argparse.ArgumentParser(description='look for bargain flights')
+    parser.add_argument('-d', '--departuredate', metavar='', required=False, help="date of departure | yyyy-mm-dd | default is tomorrow's date")
+    parser.add_argument('-r', '--returnedate', metavar='', required=False, help="date of return | yyyy-mm-dd | default is 3 days from departure")
+    parser.add_argument('-i', '--interval', metavar='', type=int, required=False, help="number of days away before return | default is 3 days from departure")
+    parser.add_argument('-p', '--pricecap', metavar='', type=int, required=False, help="price in GBP to match euqal or cheaper| default is £50")
+    parser.add_argument('-c', '--citydeaprting', metavar='', required=False, help="city departing from | default is GLA (Glasgow)")
+    parser.add_argument('-n', '--numberofextradays', metavar='', type=int, required=False, help="number of extra days after specifed date, to report on | default is for the specfied date only")
 
-parser = argparse.ArgumentParser(description='look for bargain flights')
-parser.add_argument('-d', '--departuredate', metavar='', required=False, help="date of departure | yyyy-mm-dd | default is tomorrow's date")
-parser.add_argument('-r', '--returnedate', metavar='', required=False, help="date of return | yyyy-mm-dd | default is 3 days from departure")
-parser.add_argument('-i', '--interval', metavar='', type=int, required=False, help="number of days away before return | default is 3 days from departure")
-parser.add_argument('-p', '--pricecap', metavar='', type=int, required=False, help="price in GBP to match euqal or cheaper| default is £50")
-parser.add_argument('-c', '--citydeaprting', metavar='', required=False, help="city departing from | default is GLA (Glasgow)")
-parser.add_argument('-n', '--numberofextradays', metavar='', type=int, required=False, help="number of extra days after specifed date, to report on | default is for the specfied date only")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-O', '--Oneway', action='store_true', help='one way flights | default is one way' )
+    group.add_argument('-R', '--Return', action='store_true', help='return flights | default is one way' )
 
-group = parser.add_mutually_exclusive_group()
-group.add_argument('-O', '--Oneway', action='store_true', help='one way flights | default is one way' )
-group.add_argument('-R', '--Return', action='store_true', help='return flights | default is one way' )
-
-args = parser.parse_args()
-
-
-
-# how many times do we have to run this: 
-
-if args.numberofextradays:
-    daysToRun = args.numberofextradays + 1
-else:
-    daysToRun = 1
+    args = parser.parse_args()
+    
+    return args
 
 
 
-for day in range(0, daysToRun):
-    print("day =", day)
+def generateURL(args, depart):
+    # if first time round set the date, else increment for each extra day
 
-# if first time round set the date, else increment for each extra day
-    if day == 0:
-        if args.departuredate:
-            depart = d.strptime(args.departuredate, "%Y-%m-%d").date()
-        else:
-            depart = d.now().date() + td(days=1)
-    elif day > 0:
+    if day > 0:
         depart = depart + td(days=1)
         print(depart)
 
@@ -63,7 +50,8 @@ for day in range(0, daysToRun):
         Return = depart + interval
         bothWays = 'https://www.google.co.uk/flights/#flt=' + cityDeparting + '.r/m/02j9z.' + str(depart) + '*r/m/02j9z.GLA.' + str(Return) + ';c:GBP;e:1;ls:1w;sd:1;er:177207493.-258125000.716613478.698125000;t:e'
         url = bothWays
-
+    else:
+        Return = args.Return
 
     # price cap
     if args.pricecap:
@@ -71,7 +59,10 @@ for day in range(0, daysToRun):
     else:
         priceCap = 50
 
+    return url, priceCap, cityDeparting, depart, Return
 
+
+def gather(url, priceCap):
     exe = 'D:\\I.T\\python\\APIs\\flightsCompare\\chromedriver.exe'
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
@@ -79,7 +70,7 @@ for day in range(0, daysToRun):
     driver = webdriver.Chrome(executable_path=exe, chrome_options = options)
     driver.get(url)
 
-    # report
+    # build report
 
     Results = []
 
@@ -100,7 +91,8 @@ for day in range(0, daysToRun):
             }
 
             if not price[1:].isdigit():
-                raise Exception('Price was not given for {}'.format(city.text))
+                pass
+                # raise Exception('Price was not given for {}'.format(city.text))
             elif int(price[1:]) > priceCap:
                 pass
                 # raise Exception('Price was greater than £{} for {}'.format(priceCap, city.text))
@@ -110,11 +102,13 @@ for day in range(0, daysToRun):
     except Exception as e:
         print(e)
 
-
     # kill the driver ASAP or end up with loads of instances from testing
     driver.quit()
 
+    return Results
 
+
+def report(Results, depart, priceCap, cityDeparting, Return):
     print("")
 
     if len(Results) == 0:
@@ -122,7 +116,10 @@ for day in range(0, daysToRun):
     else:
         # sort by price and print in order
         ResultsSort = sorted(Results , key=lambda elem: "%03d" % (int(elem['price'][1:])))
-        print('Flights outgoing from ' + cityDeparting + ' on ' + str(depart) + ' for £' + str(priceCap) + ' or less:')
+        if Return:
+            print('Flights outgoing from ' + cityDeparting + ' on ' + str(depart) + ' for £' + str(priceCap) + ' or less, returning ' + str(Return) + ':')
+        else:
+            print('Flights outgoing from ' + cityDeparting + ' on ' + str(depart) + ' for £' + str(priceCap) + ' or less:')
         print()
         for Dict in ResultsSort:
             for field in Dict:
@@ -131,3 +128,21 @@ for day in range(0, daysToRun):
         print()
 
     print("All done!")
+
+
+if __name__ == "__main__":
+    args = init_options()
+    if args.numberofextradays:
+        daysToRun = args.numberofextradays + 1
+    else:
+        daysToRun = 1
+    for day in range(0, daysToRun):
+        print("day =", day)
+        if day == 0:
+            if args.departuredate:
+                depart = d.strptime(args.departuredate, "%Y-%m-%d").date()
+            else:
+                depart = d.now().date() + td(days=1)
+        (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart)
+        Results = gather(url, priceCap)
+        report(Results, depart, priceCap, cityDeparting, Return)
