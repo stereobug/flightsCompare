@@ -124,7 +124,7 @@ def report(Results, depart, priceCap, cityDeparting, Return, url, args):
     print("")
 
     if len(Results) == 0:
-        print('No results for £' + str(priceCap) + " or under on " + str(depart))
+        print('No results for £{} or under on {}'.format(priceCap, depart.strftime('%d-%b-%Y')))
     else:
         # sort by price and print in order
         ResultsSort = sorted(Results , key=lambda elem: "%03d" % (int(elem['price'][1:])))
