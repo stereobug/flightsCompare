@@ -145,7 +145,7 @@ def report(Results, depart, priceCap, cityDeparting, Return, url, args):
         print()
     if args.links:
         print("link:", url)
-    print("All done!")
+
 
 
 if __name__ == "__main__":
@@ -165,3 +165,4 @@ if __name__ == "__main__":
         (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart)
         Results = gather(url, priceCap)
         report(Results, depart, priceCap, cityDeparting, Return, url, args)
+    print("All done!")
