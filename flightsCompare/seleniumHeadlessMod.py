@@ -74,7 +74,7 @@ def generateURL(args, depart):
 
 
 def gather(url, priceCap):
-    exe = os.path.join(os.getcwd(), 'chromedriver.exe')
+    exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'chromedriver.exe')
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_experimental_option('excludeSwitches', ['enable-logging']) # suppress message
