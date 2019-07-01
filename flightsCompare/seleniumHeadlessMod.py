@@ -28,7 +28,7 @@ def init_options():
 
 
 
-def generateURL(args, depart):
+def generateURL(args, depart, day):
     # if first time round set the date, else increment for each extra day
 
     if day > 0:
@@ -74,6 +74,9 @@ def generateURL(args, depart):
 
 
 def gather(url, priceCap):
+
+    # configure google chrome and launch
+
     exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'chromedriver.exe')
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
@@ -156,13 +159,12 @@ if __name__ == "__main__":
     else:
         daysToRun = 1
     for day in range(0, daysToRun):
-        # print("day =", day)
         if day == 0:
             if args.departuredate:
                 depart = d.strptime(args.departuredate, "%Y-%m-%d").date()
             else:
                 depart = d.now().date() + td(days=1)
-        (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart)
+        (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart, day)
         Results = gather(url, priceCap)
         report(Results, depart, priceCap, cityDeparting, Return, url, args)
     print("All done!")
