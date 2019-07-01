@@ -3,6 +3,7 @@
 from selenium import webdriver
 from datetime import datetime as d 
 from datetime import timedelta as td 
+import os
 from tabulate import tabulate
 import argparse
 
@@ -73,7 +74,7 @@ def generateURL(args, depart):
 
 
 def gather(url, priceCap):
-    exe = 'D:\\I.T\\python\\APIs\\flightsCompare\\chromedriver.exe'
+    exe = os.path.join(os.getcwd(), 'chromedriver.exe')
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_experimental_option('excludeSwitches', ['enable-logging']) # suppress message
