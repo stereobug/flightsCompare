@@ -14,6 +14,9 @@ from threading import Thread
 from time import sleep
 import sys
 
+# DB 
+import postgresqlConnect
+
 def init_options():
     parser = argparse.ArgumentParser(description='look for bargain flights')
     parser.add_argument('-d', '--departuredate', metavar='', required=False, help="date of departure | yyyy-mm-dd | default is tomorrow's date")
@@ -168,7 +171,8 @@ def report(Results, depart, priceCap, cityDeparting, Return, url, args):
     if args.links:
         print("link:", url)
 
-
+    #add to db - possible seperate function 
+    postgresqlConnect.insert_result(Results)
 
 if __name__ == "__main__":
     args = init_options()

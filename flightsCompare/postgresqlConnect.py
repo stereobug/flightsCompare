@@ -2,7 +2,7 @@ import psycopg2
 from config import config
  
  
-def insert_vendor(Result):
+def insert_result(Result):
     """ insert a new vendor into the vendors table """
     sql = """INSERT INTO flights(city, stops, duration, flights)
              VALUES(Result);"""
