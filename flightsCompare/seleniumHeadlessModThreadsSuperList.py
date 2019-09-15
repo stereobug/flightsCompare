@@ -91,7 +91,7 @@ def generateURL(args, depart, day):
     return url, priceCap, cityDeparting, depart, Return
 
 
-def gather(url, priceCap):
+def gather(url, priceCap, depart):
 
     # configure google chrome and launch
 
@@ -116,6 +116,7 @@ def gather(url, priceCap):
             price = price.text
             
             Result = {
+            'date': depart,
             'city' : city.text,
             'stops' : stops.text,
             'duration' : duration.text,
@@ -189,7 +190,7 @@ if __name__ == "__main__":
         animation.start()
         # make url, get info and report
         (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart, day)
-        Results = gather(url, priceCap)
+        Results = gather(url, priceCap, depart)
         done = True
         # sleep(1)
         report(Results, depart, priceCap, cityDeparting, Return, url, args)
