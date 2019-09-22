@@ -1,20 +1,23 @@
 version: '3.7'
 services:
-  chrome:
+  fb-scraper:
     build: .
-    #command: python /code/manage.py runserver 0.0.0.0:8000
-    # volumes:
-    #   - .:/code
-    #ports:
-    #  - 8000:8000
-    #depends_on:
-    #  - db
+    command: /code/keepAlive.bash
+    # command: sleep 100000000
+    volumes:
+       - .:/code
     stdin_open: true
     tty: true
-  # db:
-    # image: postgres:11
-    # volumes:
-      # - postgres_data:/var/lib/postgresql/data/
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+  db:
+    image: postgres:11
+    ports:
+     - 5432
+    volumes:
+       - postgres_data:/var/lib/postgresql/data/
 
-# volumes:
-  # postgres_data:
+volumes:
+  postgres_data:

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 
 # selenium
 from selenium import webdriver
@@ -15,7 +15,7 @@ from time import sleep
 import sys
 
 # DB 
-import postgresqlConnect
+# import psycopg2
 
 def init_options():
     parser = argparse.ArgumentParser(description='look for bargain flights')
