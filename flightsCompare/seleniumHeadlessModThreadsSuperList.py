@@ -15,7 +15,7 @@ from time import sleep
 import sys
 
 # DB 
-# import psycopg2
+import postgresqlConnect as pgc
 
 def init_options():
     parser = argparse.ArgumentParser(description='look for bargain flights')
@@ -143,6 +143,11 @@ def gather(url, priceCap, depart):
     # kill the driver ASAP or end up with loads of instances from testing
     driver.quit()
 
+
+    # add to db - possible seperate function 
+    pgc.updatedb(Results)
+    pgc.querydb('flights')
+
     return Results
 
 
@@ -171,8 +176,7 @@ def report(Results, depart, priceCap, cityDeparting, Return, url, args):
     if args.links:
         print("link:", url)
 
-    #add to db - possible seperate function 
-    postgresqlConnect.insert_result(Results)
+
 
 if __name__ == "__main__":
     args = init_options()
