@@ -3,9 +3,12 @@ services:
   fb-scraper:
     build: .
     command: /code/keepAlive.bash
+    command: python3.7 /code/seleniumHeadlessModThreadsSuperList.py -n 365 -p 16
     # command: sleep 100000000
     volumes:
        - .:/code
+    ports:
+       - 3000:3000
     stdin_open: true
     tty: true
     depends_on:
@@ -15,7 +18,7 @@ services:
   db:
     image: postgres:11
     ports:
-     - 5432
+     - 5432:5432
     volumes:
        - postgres_data:/var/lib/postgresql/data/
 

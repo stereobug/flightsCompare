@@ -97,10 +97,15 @@ def generateURL(args, depart, day):
 def gather(url, priceCap, depart):
 
     # configure google chrome and launch
-
-    exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'chromedriver.exe')
+    if sys.platform == 'win32':
+        chrome = 'chromedriver-WINDOWS.exe'
+    elif sys.platform == 'linux2' or sys.platform == 'linux':
+        chrome = 'chromedriver-LINUX.exe'
+    exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), chrome)
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
+    if sys.platform == 'linux2' or sys.platform == 'linux':
+        options.add_argument('--no-sandbox') # for linux/docker
     options.add_experimental_option('excludeSwitches', ['enable-logging']) # suppress message
     options.add_argument('window-size=1200x600') # optional
     driver = webdriver.Chrome(executable_path=exe, options = options)
@@ -143,14 +148,16 @@ def gather(url, priceCap, depart):
     # kill the driver ASAP or end up with loads of instances from testing
     driver.quit()
 
-
-    # add to db - possible seperate function 
-    pgc.updatedb(Results)
-    pgc.querydb('flights')
-
     return Results
 
 
+# add to db 
+def updatedb(Results, cityDeparting, url):
+    pgc.updatedb(Results, cityDeparting, url)
+    pgc.querydb('flights')
+
+
+# print to the screen
 def report(Results, depart, priceCap, cityDeparting, Return, url, args):
     print("")
 
@@ -196,9 +203,10 @@ if __name__ == "__main__":
         done = False
         animation = Thread(target=animate)
         animation.start()
-        # make url, get info and report
+        # make url, get info, update db, and report
         (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart, day)
         Results = gather(url, priceCap, depart)
+        updatedb(Results, cityDeparting, url)
         done = True
         # sleep(1)
         report(Results, depart, priceCap, cityDeparting, Return, url, args)
