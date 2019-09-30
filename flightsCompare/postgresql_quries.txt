@@ -1,0 +1,12 @@
+\dt+
+
+\du
+
+\x (toggle expanded display on/off)
+
+select count(*) from flights;
+
+select * from flights where destination != 'Dublin';
+
+select date, departing, destination, stops, price from flights where destination != 'Dublin';
+

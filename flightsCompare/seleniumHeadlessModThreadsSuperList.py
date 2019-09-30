@@ -22,7 +22,9 @@ def init_options():
     parser.add_argument('-d', '--departuredate', metavar='', required=False, help="date of departure | yyyy-mm-dd | default is tomorrow's date")
     parser.add_argument('-r', '--returnedate', metavar='', required=False, help="date of return | yyyy-mm-dd | default is 3 days from departure")
     parser.add_argument('-i', '--interval', metavar='', type=int, required=False, help="number of days away before return | default is 3 days from departure")
-    parser.add_argument('-p', '--pricecap', metavar='', type=int, required=False, help="price in GBP to match euqal or cheaper| default is £50")
+    parser.add_argument('-p', '--pricecap', metavar='', type=int, required=False, help="price in GBP to match euqal or cheaper | default is £50")
+    # difference between this and above is that python applies the cap above, whereas the url is changed so the search never captures higher than the given amount.
+    parser.add_argument('-u', '--uppersearchcap', metavar='', type=int, required=False, help="capped value in GBP that the search will capture | default is none")
     parser.add_argument('-c', '--citydeaprting', metavar='', required=False, help="city departing from | default is GLA (Glasgow)")
     parser.add_argument('-n', '--numberofextradays', metavar='', type=int, required=False, help="number of extra days after specifed date, to report on | default is for the specfied date only")
     parser.add_argument('-l', '--links', required=False, action='store_true', help="specify if you want links to page returned | default is off")
@@ -67,9 +69,14 @@ def generateURL(args, depart, day):
 
     root = 'https://www.google.co.uk/flights/#flt='
     link = '.r/m/02j9z.'
-    currencyAndCoordinates = ';c:GBP;e:1;ls:1w;sd:1;er:177207493.-258125000.716613478.698125000;t:e'
+    currency = ';c:GBP;e:1;ls:1w;'
+    coordinates = 'sd:1;er:177207493.-258125000.716613478.698125000;t:e'
 
-    oneWay = '{}{}{}{}{};tt:o'.format(root, cityDeparting, link, depart,currencyAndCoordinates )
+    if args.uppersearchcap:
+        uppersearchcap = 'p:' + str(args.uppersearchcap) + '00.2.GBP;'
+        oneWay = '{}{}{}{}{}{}{};tt:o'.format(root, cityDeparting, link, depart, currency, uppersearchcap, coordinates )
+    else:
+        oneWay = '{}{}{}{}{}{};tt:o'.format(root, cityDeparting, link, depart, currency, coordinates )
     url = oneWay
 
     if args.Return: 
@@ -154,7 +161,7 @@ def gather(url, priceCap, depart):
 # add to db 
 def updatedb(Results, cityDeparting, url):
     pgc.updatedb(Results, cityDeparting, url)
-    pgc.querydb('flights')
+    # pgc.querydb('flights')
 
 
 # print to the screen
@@ -200,14 +207,14 @@ if __name__ == "__main__":
             else:
                 depart = d.now().date() + td(days=1)
         # start animation while program runs
-        done = False
-        animation = Thread(target=animate)
-        animation.start()
+        # done = False
+        # animation = Thread(target=animate)
+        # animation.start()
         # make url, get info, update db, and report
         (url, priceCap, cityDeparting, depart, Return) = generateURL(args, depart, day)
         Results = gather(url, priceCap, depart)
         updatedb(Results, cityDeparting, url)
-        done = True
+        # done = True
         # sleep(1)
-        report(Results, depart, priceCap, cityDeparting, Return, url, args)
+        # report(Results, depart, priceCap, cityDeparting, Return, url, args)
     print("All done!")
