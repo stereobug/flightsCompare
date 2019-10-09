@@ -5,7 +5,9 @@ from datetime import datetime
 # connect to db
 def connectdb():
     con = psycopg2.connect(
-        host = "localhost",
+#        host = "localhost",
+#        host = "192.168.0.25",
+        host = "flightscompare_db_1",
         port = "5432",
         database = "postgres",
         user = "postgres",

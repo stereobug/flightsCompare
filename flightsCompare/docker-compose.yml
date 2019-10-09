@@ -1,11 +1,11 @@
-version: '3.7'
+version: '3.5'
 services:
   fb-scraper:
     build: .
     # command: /code/keepAlive.bash
     # command: python3.7 /code/seleniumHeadlessModThreadsSuperList.py -n 365 -p 16
     # command: sleep 100000000
-    command: bash -c "/code/oneYearCentralBelt.bash"
+    command: bash -c "/code/oneYearEuro.bash"
     volumes:
        - .:/code
     ports:
