@@ -95,7 +95,7 @@ def gather(url, priceCap):
 
     # configure google chrome and launch
 
-    exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'chromedriver.exe')
+    exe = os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'chromedriver-WINDOWS.exe')
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_experimental_option('excludeSwitches', ['enable-logging']) # suppress message
